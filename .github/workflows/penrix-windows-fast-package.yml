@@ -1,0 +1,45 @@
+name: Penrix Windows x64 fast package
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  package-windows-x64:
+    name: Fast package Windows x64
+    runs-on: windows-2025
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+          architecture: x64
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare Electron runtime
+        run: node -e "require('electron')"
+
+      - name: Prove native runner target
+        run: node -e "if(process.platform!=='win32'||process.arch!=='x64')throw new Error('Expected win32-x64, got '+process.platform+'-'+process.arch)"
+
+      - name: Package
+        run: npm run dist:x64
+
+      - name: Smoke packaged runtime natively
+        run: node scripts/smoke-packaged-runtime.mjs --platform win32 --arch x64
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: penrix-chat-on-steroids-windows-x64-fast
+          path: release/Chat-On-Steroids-Setup-x64.exe
+          if-no-files-found: error
+          retention-days: 7
