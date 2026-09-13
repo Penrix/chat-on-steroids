@@ -29,6 +29,15 @@ export function handoffPlanNotice(sessionId: string): string {
   return `\n\nA task plan exists. Check the latest update_plan call with session(action="read", session_id="${sessionId}", include=["tools"]); expand its tool_call reference for the steps and statuses before continuing.`;
 }
 
+/** The pre-2.0.9 bootstrap body, retained only for exact legacy provenance matching. */
+function legacyResumeBootstrapText(summary: string): string {
+  return (
+    'Continuing a Chat On Steroids session that was compacted. This is the brief the previous chat wrote about ' +
+    'its own work; carry on from it rather than starting again.\n\n' +
+    summary
+  );
+}
+
 /**
  * The exact ordinary user message typed into the replacement ChatGPT conversation.
  *
@@ -36,13 +45,22 @@ export function handoffPlanNotice(sessionId: string): string {
  * consumers of the same semantic message. The browser command types it into chat B, and Goal
  * reconstructs that chat-facing conversation from the durable session after the local session
  * has been rebound. Sharing one formatter prevents those two model contexts from drifting.
+ *
+ * The durable local session already carries project/workspace identity. The bootstrap therefore
+ * does not duplicate project instructions into the message, but it explicitly tells the fresh
+ * model to reactivate the project-owned continuation contract instead of treating the brief as
+ * an ordinary task summary. This is especially important for research/creative sessions whose
+ * useful state includes salience and changed judgement, not only files and TODOs.
  */
 export function resumeBootstrapText(summary: string, token = ''): string {
   const identity = destinationContinuationMarker(token);
   return (
     (identity ? `${identity}\n\n` : '') +
-    'Continuing a Chat On Steroids session that was compacted. This is the brief the previous chat wrote about ' +
-    'its own work; carry on from it rather than starting again.\n\n' +
+    'Continuing a Chat On Steroids session that was compacted. This is Continuation Recovery, not Fresh Onboarding. ' +
+    'Recover the prior working position from the brief — including its salience, rejected framings, live Working hypotheses, deliberate unknowns and unfinished reasoning when present — rather than reducing it to facts plus TODOs. ' +
+    'If the current ChatGPT Project, project instructions or user messages define a Continuation Recovery contract, follow that contract. ' +
+    'If a local Chat On Steroids project is bound, its project files and recorded session still exist; when the brief says project semantics matter, read the root AGENTS.md and the continuation sources it routes to before heavy work. ' +
+    'Then carry on from the brief rather than starting again.\n\n' +
     summary
   );
 }
@@ -55,13 +73,18 @@ export function resumeBootstrapText(summary: string, token = ''): string {
  * in the recorder. That is presentation damage, not authored-content drift. Canonicalise only
  * those known space artifacts plus line endings; deliberately do not trim/collapse
  * ordinary whitespace or normalize arbitrary Unicode, because this comparison is provenance.
+ *
+ * Accept the previous shipped bootstrap as well as the current one. A durable session created
+ * before this wording changed remains the same continuation and must not lose repair authority
+ * merely because the human-facing recovery instruction improved later.
  */
 export function resumeBootstrapMatches(recorded: string, summary: string): boolean {
   const canonical = (value: string): string =>
     value.replace(/\u00c2\u00a0/g, ' ').replace(/\u00a0/g, ' ').replace(/\r\n?/g, '\n');
   const normalized = canonical(recorded);
   const withoutMarker = (userPromptText(normalized) ?? normalized).replace(/^\[\[CLF-RESUME:[A-Za-z0-9_-]{16,64}\]\]\n\n/, '');
-  return withoutMarker === canonical(resumeBootstrapText(summary));
+  return withoutMarker === canonical(resumeBootstrapText(summary)) ||
+    withoutMarker === canonical(legacyResumeBootstrapText(summary));
 }
 
 /**
