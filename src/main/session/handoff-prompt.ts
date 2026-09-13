@@ -12,34 +12,37 @@
 /** The rules and headings. */
 export const HANDOFF_BRIEF_RULES = `Rules:
 - Treat the user's messages as the highest-authority source in the entire handoff. They are the specification. Preserve the original task, every requirement, every later correction, every constraint, every explicit preference, and every request about what should happen next. If a later message changed an earlier requirement, state the final position and say that it changed. Never let an assistant plan, guess, TODO, or tool-side interpretation override what the user actually said.
+- If the current ChatGPT Project, project instructions, or user messages define an explicit Continuation Recovery / handoff contract, that contract is authoritative for what must survive and how the next chat should recover. Follow it instead of forcing this default coding-oriented structure where they conflict. This handoff exists to preserve the prior working mind, not merely to produce a conventional task summary.
 - Preserve the substance of every user message that could matter to continuing the work, even when it is conversational, repetitive, frustrated, shorthand, or speech-to-text. Collapse duplicates only when their meaning is genuinely identical; preserve differences, changed decisions, priorities, and corrections.
+- Preserve live cognitive position when the work depends on it: what the conversation has learned to notice first, what is currently salient, which explanations or framings were rejected and why, which Working hypotheses remain live or weakened, which unknowns are deliberately still unknown, what Why-chain or reasoning edge is unfinished, and what kinds of new evidence should immediately change the next chat's attention. Do not flatten research, theory-building or creative work into facts plus TODOs when the useful state is the changed way of hearing or judging the problem.
+- This session may be coding, research, analysis, creative work, or a mixture. Do not invent repository, implementation, test, file, or release state when the session does not have it. Preserve those details only when they are real continuation state.
 - Never drop a requirement because it looks minor or because it was not worked on. Unfinished requirements matter most.
 - Use the tool evidence to decide what is actually done. An assistant message saying it will do something is not evidence that it happened; a recorded tool call that succeeded is. Say plainly which is which.
-- Keep exact identifiers: file paths, function names, versions, ports, hashes, ids, command lines, error text. Do not paraphrase them.
-- Make the current state the centre of the brief: what is complete and verified · what is currently in progress and exactly where it stopped · what is planned/decided but not implemented yet · what was attempted and failed · what was only discussed · what is still to do. Write enough state that the next agent can choose its very next tool call without rediscovering the session.
+- Keep exact identifiers when they matter: file paths, function names, versions, ports, hashes, ids, command lines, error text, source names, document names, theory terms, task names, and other stable handles. Do not paraphrase away distinctions the next chat will need.
+- Make the current state the centre of the brief: what is complete and verified · what is currently in progress and exactly where it stopped · what is planned/decided but not implemented yet · what was attempted and failed · what was only discussed · what is still to do. For cognitive or creative work, also preserve the current mother problem / live question, salience configuration, unresolved disagreement and exact reasoning position so the next chat can continue instead of onboarding from scratch.
 - Include failures and unresolved bugs with the actual error, and say what was already tried so it is not repeated.
 - AGENT MESSAGE lines are traffic with other agents in a multi-agent run. One delivered to this agent is a report about work done outside this recording — treat it as the only evidence of that work and keep its substance. One sent by this agent is work already delegated; say who is doing it so it is not delegated again.
-- State the current state of the repository, install and running processes as far as the recording shows it.
-- Preserve causal links, not just facts. When a bug, design decision or patch exists because of a specific observed failure, keep the failure → root cause → change → verification chain together. Keep known-good and known-bad behaviours distinct.
-- Treat the brief as a lossless operational compression, not an executive summary. Prefer completeness over brevity. For a substantial coding/debugging session, target roughly 10,000–30,000 tokens when the material warrants it and use the available answer budget aggressively; a ~6,000-token brief is normally too short when the conversation contains many user corrections, tool calls, patches, tests, agent reports or unresolved branches. Shorter is appropriate only when there genuinely is less useful state to preserve. Never exceed 30,000 tokens.
-- Spend extra space on concrete continuation value: exact changed files and symbols, dirty-tree caveats, test/build commands and outcomes, live-session evidence, current hypotheses with confidence, rejected approaches and why, pending worker ownership, release/install state, and the precise next actions. Do not spend that space repeating prose or narrating obvious chronology.
+- State the current state of the repository, install and running processes as far as the recording shows it, when those exist and matter to continuation.
+- Preserve causal links, not just facts. When a bug, design decision, theory correction, creative judgment or patch exists because of a specific observed failure or case, keep the failure/case → prior interpretation → what broke → changed understanding/implementation → verification chain together. Keep known-good and known-bad behaviours distinct.
+- Treat the brief as a lossless operational and cognitive compression, not an executive summary. Prefer completeness over brevity. For a substantial session, target roughly 10,000–30,000 tokens when the material warrants it and use the available answer budget aggressively; a ~6,000-token brief is normally too short when the conversation contains many user corrections, tool calls, patches, tests, agent reports, theory changes, rejected framings or unresolved branches. Shorter is appropriate only when there genuinely is less useful state to preserve. Never exceed 30,000 tokens.
+- Spend extra space on concrete continuation value: exact changed files and symbols, dirty-tree caveats, test/build commands and outcomes, live-session evidence, current hypotheses with confidence, rejected approaches and why, pending worker ownership, release/install state, current semantic authority, important active examples/cases, and the precise next actions or next reasoning move. Do not spend that space repeating prose or narrating obvious chronology.
 - Be dense and operational even when long. No preamble, no praise, no restating these instructions, no "in this session we". Use compact sections, bullets and short lines so a 10k–30k-token brief remains navigable rather than repetitive.
 - If the recording is incomplete or ambiguous, say so in one line rather than inventing detail.
 
-Structure the brief with these headings, omitting any that would be empty:
+Default structure when no stronger project-specific continuation contract supplies a better shape. Omit any heading that would be empty or inappropriate to the actual work:
 
 TASK — the original goal, in the user's terms.
 USER SPECIFICATION — every material user request, constraint, preference, correction and changed decision, with the final position explicit. This is the authoritative section.
-CURRENT STATE — what is true right now: repository/app/session state, active implementation, versions, processes, and latest relevant observed behaviour.
+CURRENT STATE — what is true right now: current working position and, where relevant, repository/app/session state, active implementation, versions, processes, latest observed behaviour, active theory/creative state and current salience.
 DONE — completed and verified, with the evidence.
-IN PROGRESS — started, not finished, and exactly where it stopped.
-PLANNED / DECIDED — concrete work the user or agent decided should happen next but that tool evidence does not show as completed yet.
-FAILED / UNRESOLVED — what broke, the error, what was already tried.
+IN PROGRESS — started, not finished, and exactly where it stopped, including an unfinished reasoning edge when that is the live work.
+PLANNED / DECIDED — concrete work the user or agent decided should happen next but that evidence does not show as completed yet.
+FAILED / UNRESOLVED — what broke, the error or contradiction, what was already tried, and which explanation remains open.
 FILES — paths touched or inspected that matter to continuation, what changed in each, and important symbols/line regions when known.
-VERIFICATION — tests, builds, smoke checks and live evidence already run, with exact commands/results and what remains unverified.
-ENVIRONMENT — commands, versions, running processes, repo/dirty-tree state, installation/release state, and anything the next agent must preserve.
-NEXT — the concrete next actions, in order.
-DO NOT — what the next agent should not redo or undo.`;
+VERIFICATION — tests, builds, smoke checks, cases, counterexamples and live evidence already used, with exact outcomes and what remains unverified.
+ENVIRONMENT — commands, versions, running processes, repo/dirty-tree state, installation/release state, project context and anything the next agent must preserve.
+NEXT — the concrete next actions or next reasoning moves, in order.
+DO NOT — what the next agent should not redo, undo, average together, silently reinterpret, or restart as Fresh Onboarding.`;
 
 /**
  * The instruction typed into the ChatGPT conversation being compacted.
@@ -65,11 +68,11 @@ export function nativeHandoffPrompt(token = '', includeToolCalls = true): string
     (identity ? `${identity}\n\n` : '') +
     'Chat On Steroids is compacting this conversation so a fresh chat can continue the work. ' +
     'Stop whatever you were doing and do only this.\n\n' +
-    'Write a handoff brief so a different coding agent can continue this unfinished task in a brand-new ' +
+    'Write a handoff brief so a different agent can continue this unfinished task in a brand-new ' +
     "conversation, with no memory of anything here. Everything you know about this session — the user's " +
     (includeToolCalls ? 'messages, your own replies, and every tool call you made against this machine with its result — is the ' :
       'messages and your own replies, including interim updates — is the ') +
-    'material. Write it so an agent who reads only your brief can carry on correctly.\n\n' +
+    'material. Write it so an agent who reads only your brief can recover the working position and carry on correctly rather than starting again.\n\n' +
     `${HANDOFF_BRIEF_RULES}\n\n` +
     (includeToolCalls ? '' : 'Tool-detail setting: preserve verified outcomes and distinguish them from claims, but omit raw tool-call arguments and result bodies from the brief. Do not copy tool transcripts. This setting controls the brief, not the history you already saw.\n\n') +
     'Your reply to this message must be the brief itself and nothing else: no preamble, no closing remark, no ' +
